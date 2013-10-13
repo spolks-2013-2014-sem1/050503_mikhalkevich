@@ -1,0 +1,6 @@
+#Task 2. Echo-server
+#Parametrs in command line:
+#Mode 1: ip port
+#Mode 2: port       (ip can be any)
+#Serial processing clients
+#For closing server - Ctrl+C
