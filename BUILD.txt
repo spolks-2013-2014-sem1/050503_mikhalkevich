@@ -1,0 +1,4 @@
+#For build lab
+#1. Run build.sh at lab# folder
+#2. Executable and object files will be at .../lab#/build/ folder
+#3. Executable file's name is 'lab#.out'
