@@ -1,5 +1,3 @@
-#pragma once
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -21,11 +19,12 @@
 		(program_name = argv[ 0 ] )
 #define EXIT(s) exit(s)
 #define CLOSE(s) if ( close( s ) ) error( 1, errno, \
-		"error close " )
+		"error close \n" )
 #define set_errno(e) errno = ( e )
-#define isvalidsock(s) ( ( s ) ) >= 0 )
+#define isvalidsock(s) ( ( s ) >= 0 )
 
 typedef int SOCKET;
+extern char *program_name;
 
 
 //For fill sockaddr_in

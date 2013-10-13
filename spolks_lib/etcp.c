@@ -54,16 +54,16 @@ SOCKET tcp_server(char *hname, char *sname)
     set_address(hname, sname, &local, "tcp");
     s = socket(AF_INET, SOCK_STREAM, 0);
     if (!isvalidsock(s))
-        error(1, errno, "error function 'socket'");
+        error(1, errno, "error function 'socket'\n");
 
     if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)))
-        error(1, errno, "error function 'setsockopt'");
+        error(1, errno, "error function 'setsockopt'\n");
 
     if (bind(s, (struct sockaddr *) &local, sizeof(local)))
-        error(1, errno, "error function 'bind'");
+        error(1, errno, "error function 'bind'\n");
 
-    if (listen(s, NLISTEN))
-        error(1, errno, "error function 'listen'");
+    if (listen(s, 0))
+        error(1, errno, "error function 'listen'\n");
 
     return s;
 }
@@ -76,10 +76,10 @@ SOCKET tcp_client(char *hname, char *sname)
     set_address(hname, sname, &peer, "tcp");
     s = socket(AF_INET, SOCK_STREAM, 0);
     if (!isvalidsock(s))
-        error(1, errno, "error function 'socket'");
+        error(1, errno, "error function 'socket'\n");
 
     if (connect(s, (struct sockaddr *) &peer, sizeof(peer)))
-        error(1, errno, "error function 'connect'");
+        error(1, errno, "error function 'connect'\n");
 
     return s;
 }
