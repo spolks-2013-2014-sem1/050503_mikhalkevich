@@ -29,11 +29,11 @@ typedef int SOCKET;
 
 
 //For fill sockaddr_in
-static void set_address( char *host, char *port,
-	struct sockaddr_in *sap, char *protocol );
+static void set_address(char *host, char *port,
+                        struct sockaddr_in *sap, char *protocol);
 //For catch errors
-void error( int status, int err, char *format, ...);
+void error(int status, int err, char *format, ...);
 //Create SOCKET for tcp_server
-SOCKET tcp_server( char *host, char *port );
+SOCKET tcp_server(char *host, char *port);
 //Create and connect tcp_client
-SOCKET tcp_client( char *host, char *port );
+SOCKET tcp_client(char *host, char *port);
