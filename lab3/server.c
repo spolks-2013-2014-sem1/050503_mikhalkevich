@@ -13,8 +13,7 @@ static void server(SOCKET s, struct sockaddr_in *peerp)
     filehandler = open(buf, O_RDONLY);
     if (filehandler == -1)
     {
-	error(1, errno, "File not found\n");
-	CLOSE(filehandler);
+	printf("File not found: '%s'\n",buf);
 	return;
     }
 
@@ -24,7 +23,6 @@ static void server(SOCKET s, struct sockaddr_in *peerp)
 	{
 		rc = read(filehandler, buf, sizeof(buf));
 	}while(rc == -1 && errno == EINTR);
-
 	if( rc == 0 )
 	{
 		printf("Transmit successful!\n");

@@ -8,17 +8,17 @@ static void client(SOCKET s, struct sockaddr_in *peerp, char* filename)
     int sc = 0;
     int filehandler = -1;
     char buf[1000];
+    int count = 0;
 
     do
     {
-    	rc = send(s, filename, sizeof(filename), 0);
+    	rc = send(s, filename, strlen(filename)+1, 0);
     }while(rc == -1 && errno == EINTR);
     if( rc == -1)
     {
 	error(1, errno, "Connection down. Can't send.\n");
 	return;
     }
-
     filehandler = open(filename, O_WRONLY | O_CREAT | O_TRUNC,
 	S_IRUSR | S_IWUSR);
     if (filehandler == -1)
@@ -37,7 +37,7 @@ static void client(SOCKET s, struct sockaddr_in *peerp, char* filename)
 
 	if( rc == 0 )
 	{
-		printf("Recieve successful!\n");
+		printf("Recieve finished! %d bytes recived.\n", count);
 		CLOSE(filehandler);
 		return;
 	}else if(rc == -1)
@@ -50,6 +50,7 @@ static void client(SOCKET s, struct sockaddr_in *peerp, char* filename)
 	{
 		sc = write(filehandler, buf, rc);
 	}while(sc == -1 && errno == EINTR);
+	count += sc;
 
 	if(sc != rc)
 	{
