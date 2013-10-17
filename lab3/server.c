@@ -13,16 +13,8 @@ static void server(SOCKET s, struct sockaddr_in *peerp)
     filehandler = open(buf, O_RDONLY);
     if (filehandler == -1)
     {
-/*	if(errno == EEXIST)*/
-	
-		send(s,"File not found\n",16,0);
-		error(1, errno, "File not found\n");
-	
-/*	else
-	{
-		send(s,"Can't open file\n",17,0);
-		error(1, errno, "Can't open file\n");
-	}*/
+	error(1, errno, "File not found\n");
+	CLOSE(filehandler);
 	return;
     }
 
@@ -36,10 +28,12 @@ static void server(SOCKET s, struct sockaddr_in *peerp)
 	if( rc == 0 )
 	{
 		printf("Transmit successful!\n");
+		CLOSE(filehandler);
 		return;
 	}else if(rc == -1)
 	{
 		error(1, errno, "Can't read file.\n");
+		CLOSE(filehandler);
 		return;
 	}
 	do
@@ -50,6 +44,7 @@ static void server(SOCKET s, struct sockaddr_in *peerp)
 	if(sc != rc)
 	{
 		error(1, errno, "Connection down. Can't send.\n");
+		CLOSE(filehandler);
 		return;
 	}
     }
@@ -70,7 +65,7 @@ int main(int argc, char **argv)
     if (argc == 2) {
         hname = NULL;
         sname = argv[1];
-    } else if (argc == 4) {
+    } else if (argc == 3) {
         hname = argv[1];
         sname = argv[2];
     } else {
