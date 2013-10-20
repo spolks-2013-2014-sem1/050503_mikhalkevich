@@ -11,40 +11,33 @@ static void server(SOCKET s, struct sockaddr_in *peerp)
 
     rc = recv(s, buf, sizeof(buf), 0);
     filehandler = open(buf, O_RDONLY);
-    if (filehandler == -1)
-    {
-	printf("File not found: '%s'\n",buf);
-	return;
+    if (filehandler == -1) {
+        printf("File not found: '%s'\n", buf);
+        return;
     }
 
-    while (rc > 0)
-    {
-	do
-	{
-		rc = read(filehandler, buf, sizeof(buf));
-	}while(rc == -1 && errno == EINTR);
-	if( rc == 0 )
-	{
-		printf("Transmit successful!\n");
-		CLOSE(filehandler);
-		return;
-	}else if(rc == -1)
-	{
-		error(1, errno, "Can't read file.\n");
-		CLOSE(filehandler);
-		return;
-	}
-	do
-	{
-		sc = send(s, buf, rc, 0);
-	}while(sc == -1 && errno == EINTR);
+    while (rc > 0) {
+        do {
+            rc = read(filehandler, buf, sizeof(buf));
+        } while (rc == -1 && errno == EINTR);
+        if (rc == 0) {
+            printf("Transmit successful!\n");
+            CLOSE(filehandler);
+            return;
+        } else if (rc == -1) {
+            error(1, errno, "Can't read file.\n");
+            CLOSE(filehandler);
+            return;
+        }
+        do {
+            sc = send(s, buf, rc, 0);
+        } while (sc == -1 && errno == EINTR);
 
-	if(sc != rc)
-	{
-		error(1, errno, "Connection down. Can't send.\n");
-		CLOSE(filehandler);
-		return;
-	}
+        if (sc != rc) {
+            error(1, errno, "Connection down. Can't send.\n");
+            CLOSE(filehandler);
+            return;
+        }
     }
 }
 
