@@ -1,41 +1,39 @@
 #include"../spolks_lib/etcp.h"
 
-char *program_name;
-
-static void server(SOCKET s, struct sockaddr_in *peerp)
+static void server(socket_t s, struct sockaddr_in *peerp)
 {
-    int rc = 0;
-    int sc = 0;
+    int read_count = 0;
+    int send_count = 0;
     int filehandler = -1;
     char buf[1000];
 
-    rc = recv(s, buf, sizeof(buf), 0);
+    read_count = recv(s, buf, sizeof(buf), 0);
     filehandler = open(buf, O_RDONLY);
     if (filehandler == -1) {
         printf("File not found: '%s'\n", buf);
         return;
     }
 
-    while (rc > 0) {
+    while (read_count > 0) {
         do {
-            rc = read(filehandler, buf, sizeof(buf));
-        } while (rc == -1 && errno == EINTR);
-        if (rc == 0) {
+            read_count = read(filehandler, buf, sizeof(buf));
+        } while (read_count == -1 && errno == EINTR);
+        if (read_count == 0) {
             printf("Transmit successful!\n");
-            CLOSE(filehandler);
+            close(filehandler);
             return;
-        } else if (rc == -1) {
+        } else if (read_count == -1) {
             error(1, errno, "Can't read file.\n");
-            CLOSE(filehandler);
+            close(filehandler);
             return;
         }
         do {
-            sc = send(s, buf, rc, 0);
-        } while (sc == -1 && errno == EINTR);
+            send_count = send(s, buf, read_count, 0);
+        } while (send_count == -1 && errno == EINTR);
 
-        if (sc != rc) {
+        if (send_count != read_count) {
             error(1, errno, "Connection down. Can't send.\n");
-            CLOSE(filehandler);
+            close(filehandler);
             return;
         }
     }
@@ -44,34 +42,34 @@ static void server(SOCKET s, struct sockaddr_in *peerp)
 int main(int argc, char **argv)
 {
     struct sockaddr_in peer;
-    char *hname;
-    char *sname;
+    char *hostname;
+    char *servicename;
     int peerlen;
-    SOCKET s1;
-    SOCKET s;
+    socket_t client_socket;
+    socket_t server_socket;
     const int on = 1;
 
-    INIT();
-
     if (argc == 2) {
-        hname = NULL;
-        sname = argv[1];
+        hostname = NULL;
+        servicename = argv[1];
     } else if (argc == 3) {
-        hname = argv[1];
-        sname = argv[2];
+        hostname = argv[1];
+        servicename = argv[2];
     } else {
         error(1, errno, "count of parametrs mismatch\n");
     }
 
-    s = tcp_server(hname, sname);
+    server_socket = tcp_server(hostname, servicename);
 
     do {
         peerlen = sizeof(peer);
-        s1 = accept(s, (struct sockaddr *) &peer, &peerlen);
-        if (!isvalidsock(s1))
+        client_socket =
+            accept(server_socket, (struct sockaddr *) &peer, &peerlen);
+        if (client_socket < 0)
             error(1, errno, "error function accept\n");
-        server(s1, &peer);
-        CLOSE(s1);
+        server(client_socket, &peer);
+        close_socket(client_socket);
     } while (1);
-    EXIT(0);
+    close_socket(server_socket);
+    exit(0);
 }

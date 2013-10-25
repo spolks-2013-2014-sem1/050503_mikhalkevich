@@ -1,19 +1,17 @@
 #include"../spolks_lib/etcp.h"
 
-char *program_name;
-
-static void client(SOCKET s, struct sockaddr_in *peerp, char *filename)
+static void client(socket_t s, struct sockaddr_in *peerp, char *filename)
 {
-    int rc = 0;
-    int sc = 0;
+    int recieve_count = 0;
+    int send_count = 0;
     int filehandler = -1;
     char buf[1000];
     int count = 0;
 
     do {
-        rc = send(s, filename, strlen(filename) + 1, 0);
-    } while (rc == -1 && errno == EINTR);
-    if (rc == -1) {
+        recieve_count = send(s, filename, strlen(filename) + 1, 0);
+    } while (recieve_count == -1 && errno == EINTR);
+    if (recieve_count == -1) {
         error(1, errno, "Connection down. Can't send.\n");
         return;
     }
@@ -21,32 +19,32 @@ static void client(SOCKET s, struct sockaddr_in *peerp, char *filename)
                        S_IRUSR | S_IWUSR);
     if (filehandler == -1) {
         error(1, errno, "Can't create file.\n");
-        CLOSE(filehandler);
+        close(filehandler);
         return;
     }
 
-    while (rc > 0) {
+    while (recieve_count > 0) {
         do {
-            rc = recv(s, buf, sizeof(buf), 0);
-        } while (rc == -1 && errno == EINTR);
+            recieve_count = recv(s, buf, sizeof(buf), 0);
+        } while (recieve_count == -1 && errno == EINTR);
 
-        if (rc == 0) {
+        if (recieve_count == 0) {
             printf("Recieve finished! %d bytes recived.\n", count);
-            CLOSE(filehandler);
+            close(filehandler);
             return;
-        } else if (rc == -1) {
+        } else if (recieve_count == -1) {
             error(1, errno, "Can't recieve file.\n");
-            CLOSE(filehandler);
+            close(filehandler);
             return;
         }
         do {
-            sc = write(filehandler, buf, rc);
-        } while (sc == -1 && errno == EINTR);
-        count += sc;
+            send_count = write(filehandler, buf, recieve_count);
+        } while (send_count == -1 && errno == EINTR);
+        count += send_count;
 
-        if (sc != rc) {
+        if (send_count != recieve_count) {
             error(1, errno, "Can't write to file.\n");
-            CLOSE(filehandler);
+            close(filehandler);
             return;
         }
     }
@@ -55,27 +53,25 @@ static void client(SOCKET s, struct sockaddr_in *peerp, char *filename)
 int main(int argc, char **argv)
 {
     struct sockaddr_in peer;
-    char *hname;
-    char *sname;
+    char *hostname;
+    char *servicename;
     char *filename;
     int peerlen;
-    SOCKET s;
+    socket_t s;
     const int on = 1;
 
-    INIT();
-
     if (argc == 4) {
-        hname = argv[1];
-        sname = argv[2];
+        hostname = argv[1];
+        servicename = argv[2];
         filename = argv[3];
     } else {
-        error(1, errno, "count of parametrs mismatch\n");
+        error(1, errno, "number of parametrs mismatch\n");
     }
 
-    s = tcp_client(hname, sname);
-    if (!isvalidsock(s))
+    s = tcp_client(hostname, servicename);
+    if (s < 0)
         error(1, errno, "error in tcp_client\n");
     client(s, &peer, filename);
-    CLOSE(s);
-    EXIT(0);
+    close_socket(s);
+    exit(0);
 }
