@@ -1,0 +1,10 @@
+#Task 3. Send file TCP - from server to client:
+#Parametrs in command line (server):
+#Mode 1: ip port
+#Mode 2: port       (ip can be any)
+#Serial processing clients
+#For closing server - Ctrl+C
+
+#Parametrs in command line (client):
+#ip port filename
+
