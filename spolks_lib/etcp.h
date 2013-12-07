@@ -31,3 +31,7 @@ socket_t tcp_server(char *hostname, char *servicename);
 
 //Create and connect tcp_client
 socket_t tcp_client(char *hostname, char *servicename);
+
+socket_t udp_server(char *host, char *port );
+
+socket_t udp_client( char *host, char *port, struct sockaddr_in *sap);
