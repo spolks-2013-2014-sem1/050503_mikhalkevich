@@ -91,3 +91,103 @@ socket_t tcp_client(char *hostname, char *servicename)
 
     return s;
 }
+
+socket_t udp_server(char *hname, char *sname)
+{
+	socket_t s;
+	struct sockaddr_in local;
+	const int on = 1;
+
+	set_address(hname, sname, &local, "udp");
+	s = socket(PF_INET, SOCK_DGRAM, 0);
+	if(s < 0)
+		error(1, errno, "error function 'socket'\n");
+		
+	if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)))
+        error(1, errno, "error function 'setsockopt'\n");
+
+	if( bind(s, (struct sockaddr *) &local, sizeof(local)))
+		error(1, errno, "error function 'bind'\n");
+	return s;
+}
+
+socket_t udp_client(char *hname, char *sname,
+	struct sockaddr_in *sap)
+{
+	socket_t s;
+	const int on = 1;
+	set_address(hname, sname, sap, "udp");
+	s = socket( PF_INET, SOCK_DGRAM, 0);
+	if (s < 0)
+		error(1, errno, "error function 'socket'\n");
+	if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)))
+        error(1, errno, "error function 'setsockopt'\n");
+	return s;
+}
+
+int udp_secure_send(socket_t s, char* buf, int buf_size)
+{
+	char* out_buf;
+	int retrans;
+	int count_send, count_recv;
+	char answer;
+	retrans = MAXRETRANS;
+	out_buf = (char*)malloc(sizeof(char)*(buf_size+1));
+	memcpy(out_buf+1,buf,buf_size);
+	out_buf[0] = packet_counter_sender;
+	for(; retrans>0; retrans--)
+    {
+		do {
+			count_send = send(s, out_buf, buf_size+1, 0/*,
+				(struct sockaddr*)peerp,peerlen*/);
+        } while (count_send == -1 && errno == EINTR);
+	
+		do {
+            count_recv = recv(s, &answer, 1, 0/*,
+				(struct sockaddr *)peerp, &peerlen*/);
+        } while (count_recv == -1 && errno == EINTR);
+		
+		if(answer == packet_counter_sender)
+		{
+			packet_counter_sender++;
+			free(out_buf);
+			return count_send-1;
+		}
+	}
+	free(out_buf);
+	return -1;
+}
+
+int udp_secure_recv(socket_t s, char* buf, int buf_size)
+{
+	char* out_buf;
+	int retrans = MAXRETRANS;
+	int count_send, count_recv;
+	char answer;
+	out_buf = (char*)malloc(sizeof(char)*(buf_size+1));
+	//memcpy(outbuf+1,buf,buf_size);
+	//outbuf[0] = packet_counter;
+	for(; retrans>0; retrans--)
+    {
+		do {
+			count_recv = recv(s, out_buf, buf_size+1, 0/*,
+				(struct sockaddr*)peerp,peerlen*/);
+        } while (count_recv == -1 && errno == EINTR);
+		
+		answer = out_buf[0];
+		do {
+			count_send = send(s, &answer, 1, 0/*,
+				(struct sockaddr *)peerp, &peerlen*/);
+		} while (count_send == -1 && errno == EINTR);
+		
+		if(answer == packet_counter_reciever)
+		{
+			packet_counter_reciever++;
+			memcpy(buf, out_buf+1, buf_size);
+			free(out_buf);
+			return count_recv-1;
+		}
+	}
+	free(out_buf);
+	return -1;
+}

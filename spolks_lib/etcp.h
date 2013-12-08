@@ -35,3 +35,11 @@ socket_t tcp_client(char *hostname, char *servicename);
 socket_t udp_server(char *host, char *port );
 
 socket_t udp_client( char *host, char *port, struct sockaddr_in *sap);
+
+int udp_secure_recv(socket_t s, char* buf, int buf_size);
+
+int udp_secure_send(socket_t s, char* buf, int buf_size);
+
+static char packet_counter_sender = 0;
+static char packet_counter_reciever = 0;
+#define MAXRETRANS 15
