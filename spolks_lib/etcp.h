@@ -39,5 +39,9 @@ socket_t udp_client( char *host, char *port, struct sockaddr_in *sap);
 int udp_secure_recv(socket_t s, char* buf, int buf_size, char* packet_counter_reciever);
 
 int udp_secure_send(socket_t s, char* buf, int buf_size, char* packet_counter_sender);
+/*
+int udp_secure_recv_nc(socket_t s, char* buf, int buf_size, char* packet_counter_reciever, struct sockaddr* peerp, int peerlen);
 
+int udp_secure_send_nc(socket_t s, char* buf, int buf_size, char* packet_counter_sender, struct sockaddr* peerp, int peerlen);
+*/
 #define MAXRETRANS 15

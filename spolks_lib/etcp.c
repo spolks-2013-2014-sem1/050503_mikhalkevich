@@ -202,3 +202,82 @@ int udp_secure_recv(socket_t s, char* buf, int buf_size, char* packet_counter_re
 	free(out_buf);
 	return -1;
 }
+/*
+int udp_secure_recv_nc(socket_t s, char* buf, int buf_size, char* packet_counter_reciever, struct sockaddr* peerp, int peerlen)
+{
+	char* out_buf;
+	int retrans = MAXRETRANS;
+	int count_send, count_recv;
+	char answer;
+	out_buf = (char*)malloc(sizeof(char)*(buf_size+1));
+	//memcpy(outbuf+1,buf,buf_size);
+	//outbuf[0] = packet_counter;
+	for(; retrans>0; retrans--)
+    {
+		do {
+			count_recv = recvfrom(s, out_buf, buf_size+1, 0,
+				(struct sockaddr*)peerp,peerlen);
+        } while (count_recv == -1 && (errno == EINTR || errno == 0));
+		
+		
+		
+		answer = out_buf[0];
+		
+		printf("Recieve: %d %d \n", (int)answer,errno);
+		printf("Count: %d\n", count_recv);
+		printf("Packet_counter: %d\n", *packet_counter_reciever);
+		
+		do {
+			count_send = sendto(s, &answer, 1, 0,
+				(struct sockaddr *)peerp, &peerlen);
+		} while (count_send == -1 && errno == EINTR);
+		
+		if(answer == *packet_counter_reciever)
+		{
+			(*packet_counter_reciever)++;
+			memcpy(buf, out_buf+1, buf_size);
+			free(out_buf);
+			return count_recv-1;
+		}
+	}
+	free(out_buf);
+	return -1;
+}
+
+int udp_secure_send_nc(socket_t s, char* buf, int buf_size, char* packet_counter_sender, struct sockaddr* peerp, int peerlen)
+{
+	char* out_buf;
+	int retrans;
+	int count_send, count_recv;
+	char answer;
+	retrans = MAXRETRANS;
+	out_buf = (char*)malloc(sizeof(char)*(buf_size+1));
+	memcpy(out_buf+1,buf,buf_size);
+	out_buf[0] = *packet_counter_sender;
+	for(; retrans>0; retrans--)
+    {
+		do {
+			count_send = sendto(s, out_buf, buf_size+1, 0,
+				(struct sockaddr*)peerp,peerlen);
+        } while (count_send == -1 && errno == EINTR);
+		
+		printf("Send: %d %d \n", (int)out_buf[0], errno);
+		printf("Count: %d\n", count_send);
+		printf("Packet_counter_sender: %d\n", *packet_counter_sender);
+		
+		do {
+            count_recv = recvfrom(s, &answer, 1, 0,
+				(struct sockaddr *)peerp, &peerlen);
+        } while (count_recv == -1 && errno == EINTR);
+		
+		if(answer == *packet_counter_sender)
+		{
+			(*packet_counter_sender)++;
+			free(out_buf);
+			return count_send-1;
+		}
+	}
+	free(out_buf);
+	return -1;
+}
+*/
