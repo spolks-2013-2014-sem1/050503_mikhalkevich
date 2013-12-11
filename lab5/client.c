@@ -5,13 +5,17 @@ long int recieved_count = 0;
 socket_t s;
 void sig_urg(int signo);
 
-static void udp_client_handler(socket_t s, struct sockaddr_in *peerp, char *filename)
+void udp_client_handler(socket_t s, struct sockaddr_in *peerp, char *filename)
 {
     long int recieve_count = 0;
     long int send_count = 0;
     int filehandler = -1;
     int peerlen;
     char buf[512];
+	int i;
+	int j = 0;
+	char packet_counter_reciever = 0;
+
 
 	//SYNC
 	do {
@@ -22,7 +26,7 @@ static void udp_client_handler(socket_t s, struct sockaddr_in *peerp, char *file
         error(1, errno, "Connection down. Can't sync.\n");
         return;
     }
-
+	printf("Connected!\n");
 
 
 	peerlen = sizeof(*peerp);
@@ -34,7 +38,29 @@ static void udp_client_handler(socket_t s, struct sockaddr_in *peerp, char *file
         error(1, errno, "Connection down. Can't send.\n");
         return;
     }
-    filehandler = open(filename, O_WRONLY | O_CREAT | O_TRUNC,
+    
+    for(i = strlen(filename)-1; i > 0; i--)
+    {
+		if(filename[i]=='/')
+		{
+			break;
+		}
+	}
+	
+	if (i == 0)
+	{
+		error(1, errno, "Can't create file.\n");
+        close(filehandler);
+        return;
+	}
+	
+	for(++i; i < strlen(filename); i++)
+    {
+		buf[j++] = filename[i];
+	}
+	buf[j] = '\0';
+    
+    filehandler = open(buf, O_WRONLY | O_CREAT | O_TRUNC,
                        S_IRUSR | S_IWUSR);
     if (filehandler == -1) {
         error(1, errno, "Can't create file.\n");
@@ -44,8 +70,9 @@ static void udp_client_handler(socket_t s, struct sockaddr_in *peerp, char *file
 
     while (recieve_count > 0) {
         do {
-            recieve_count = udp_secure_recv(s, buf, sizeof(buf)/*,
+            recieve_count = udp_secure_recv(s, buf, sizeof(buf),&packet_counter_reciever/*,
 				(struct sockaddr *)peerp, &peerlen*/);
+				//printf("ERROR and count: %d %ld\n", errno,recieve_count);
         } while (recieve_count == -1 && errno == EINTR);
 
         if (recieve_count == 0) {
@@ -54,6 +81,7 @@ static void udp_client_handler(socket_t s, struct sockaddr_in *peerp, char *file
             close(filehandler);
             return;
         } else if (recieve_count == -1) {
+			//printf("ERROR: %d\n", errno);
             error(1, errno, "Can't recieve file.\n");
             close(filehandler);
             return;
@@ -71,7 +99,7 @@ static void udp_client_handler(socket_t s, struct sockaddr_in *peerp, char *file
     }
 }
 
-static void tcp_client_handler(socket_t s, struct sockaddr_in *peerp, char *filename)
+void tcp_client_handler(socket_t s, struct sockaddr_in *peerp, char *filename)
 {
     long int recieve_count = 0;
     long int send_count = 0;
@@ -159,7 +187,6 @@ int main(int argc, char **argv)
 
 		if(connect(s, (struct sockaddr*)&peer, sizeof(peer) ) )
 			error(1, errno, "error function connect");
-		packet_counter_reciever = 0;
 		udp_client_handler(s, &peer, filename);
     }
     if(type == 't')

@@ -2,6 +2,8 @@
 
 long int count_data = 0;
 
+extern char packet_counter_sender;
+
 static void udp_server_handler(socket_t s, struct sockaddr_in *peerp)
 {
     long int read_count = 0;
@@ -10,7 +12,9 @@ static void udp_server_handler(socket_t s, struct sockaddr_in *peerp)
     int peerlen;
     int filehandler = -1;
     char buf[512];
+    char packet_counter_sender = 0;
 
+	printf("Connected!\n");
 	peerlen = sizeof(*peerp);
     read_count = recv(s, buf, sizeof(buf), 0);
     filehandler = open(buf, O_RDONLY);
@@ -24,7 +28,7 @@ static void udp_server_handler(socket_t s, struct sockaddr_in *peerp)
             read_count = read(filehandler, buf, sizeof(buf));
         } while (read_count == -1 && errno == EINTR);
         if (read_count == 0) {
-			udp_secure_send(s, "", 0/*,
+			udp_secure_send(s, "", 0,&packet_counter_sender/*,
 				(struct sockaddr*)peerp,peerlen*/);
             printf("Transmit successful! %ld\n", sent_count);
             printf("Counter OOB: %ld\n", count_data);
@@ -38,7 +42,7 @@ static void udp_server_handler(socket_t s, struct sockaddr_in *peerp)
         }
         
         do {
-            send_count = udp_secure_send(s, buf, read_count/*,
+            send_count = udp_secure_send(s, buf, read_count,&packet_counter_sender/*,
 				(struct sockaddr*)peerp,peerlen*/);
         } while (send_count == -1 && errno == EINTR);
 /*
@@ -136,13 +140,10 @@ int main(int argc, char **argv)
 
 	if(type == 'u')
 	{
-		server_socket = udp_server(hostname, servicename);
-
 		do {
+			memset(&peer,0x00,sizeof(peer));
 			server_socket = udp_server(hostname, servicename);
 			peerlen = sizeof(peer);
-        
-			packet_counter_sender = 0;
 			
 			peerlen = sizeof(peer);
 			recvfrom(server_socket, NULL, 1, 0,
