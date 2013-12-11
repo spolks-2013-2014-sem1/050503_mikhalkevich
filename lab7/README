@@ -1,0 +1,10 @@
+#Task 7. TCP with threads, serial UDP. Send file - from server to client:
+#Parametrs in command line (server):
+#Mode 1: ip port {u|t}
+#Mode 2: port {u|t}       (ip can be any)
+#Parallel processing clients for TCP, serial for UDP
+#For closing server - Ctrl+C
+
+#Parametrs in command line (client):
+#ip port filename {u|t}
+
